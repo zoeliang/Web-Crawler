@@ -1,0 +1,34 @@
+#!/bin/bash
+function walk(){
+        for file in ` ls $1 `
+        do
+                if [ -d $1"/"$file ]
+                then
+                        walk $1"/"$file
+                else
+                        echo $1"/"$file >> wget_out
+                fi
+        done
+}
+wget -U firefox -r -N -o mylog -A.pdf,.html -w 5 -P yuan_output http://www.ccs.neu.edu &
+pid=$!
+while true; do
+	num=`ls -lR yuan_output | grep "^-" | wc -l`
+	if [ "$num" -lt 101 ]; then
+		echo $num
+		echo "not yet.."
+		sleep 5
+	else
+		echo "enough!"
+		break
+	fi
+done
+echo "pid="$pid
+kill $pid
+echo "process killed."
+cd yuan_output
+walk "www.ccs.neu.edu"
+echo "list generated."
+cat wget_out | while read line; do if [ ${line: -3} == "txt" ]; then continue; else echo $line; fi; done >> out
+mv out wget_out
+echo "chop robots.txt"
